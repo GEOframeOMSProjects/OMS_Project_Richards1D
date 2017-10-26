@@ -1,0 +1,133 @@
+/*
+ * Solutore per il problema di Richards 1D
+ *   condizione iniziale per la suzione del suolo assegnata dall'utente
+ *   condizioni al contorno sulla suzione assegnata dall'utente
+ *   
+ * 	 metodo numerico Nested Newton 
+ * 	 	Casulli, Vincenzo, and Paola Zanolli. 
+ * 	 	"A nested Newton-type algorithm for finite volume methods solving Richards' equation in mixed form." 
+ * 	 	SIAM Journal on Scientific Computing 32.4 (2010): 2255-2273.
+ */
+import static oms3.SimBuilder.instance as OMS3
+def home = oms_prj
+
+// start and end date of the simulation
+
+def startDate= "2016-10-08 00:00"
+
+
+def endDate="2016-10-14 00:00"
+
+
+def tTimestep = 5 // espresso in minuti 
+
+
+OMS3.sim {
+
+resource "$oms_prj/lib"
+    
+    //model() {
+    model(while : "reader_data_topBC.doProcess"  ){
+        components {
+           
+           "solver" "Richards1DSolver.Richards1DSolver"
+           
+           "reader_data_topBC"    "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+           "reader_data_bottomBC" "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+        
+           "read_iC" "readTxt.ReadTxtMultiColumn"
+        
+        }
+        
+        parameter {
+           // conducibilità idraulica a saturazione [m/s]
+           "solver.ks" "0.000000556"
+          
+          // contenuto d'acqua adimensionale a saturazione
+          "solver.thetaS" "0.38"
+          
+          // contenuto d'acqua adimensionale residuo
+          "solver.thetaR" "0.068"
+          
+          // parametri del modello di Van Genuchten
+          "solver.n" "1.09"
+          "solver.alpha" "0.8"  // [1/m]
+          
+          // parametri del modello di Brooks and Corey
+          "solver.psiE" "1.9"  // [m]
+          "solver.lambda" "1.9"
+          
+          // parametri del modello di Kosugi con distribuzione unimodale
+          // valore della mediana della distribuzione dei pori [m]
+          "solver.rMedian" "0.0000020781"
+          // deviazione standard della distribuzione dei pori 
+          "solver.sigma" "0.6"            
+          
+          // scelta del modello per la SWRC:
+          // - Van Genuchten;
+          // - Kosugi;
+          // - Brooks and Corey;
+          "solver.soilHydraulicModel" "Van Genuchten"
+          
+          // scelta della condizione al contorno alla superficie:
+          // - Top Dirichlet assegno il valore della suzione
+          // - Top Neumann assegno il valore del flusso 
+          "solver.topBCType"  "Top Dirichlet";
+		  
+		  // scelta della condizione al contorno al fondo:
+          // - Bottom Dirichlet assegno il valore della suzione
+          // - Bottom Free Drainage 
+		  "solver.bottomBCType"  "Bottom Dirichlet";
+		  
+          // Altezza della colonna di suolo [m]
+          "solver.spaceBottom" "2.0"
+          
+          // Tolleranza per il metodo Nested Newton
+          "solver.newtonTolerance" "0.00000001"
+          
+          // Algoritmo per la soluzione:
+          // - 0 --> metodo di Newton, si ha solo l'outer iteration
+          // - 1 --> nested Newton: si applica il metodo di Newton
+          //		  due volte, un ciclo annidiato nell'altro.
+          //          In questo caso si ha un outer iteration e un inner iteration
+          "solver.nestedNewton" "1"
+          
+          // time step [s]
+          "solver.tTimestep" "10"
+		  
+          // parameters reader data input top boundary condition
+          "reader_data_topBC.file"             "$oms_prj//data/TOP_formatted.csv"
+          "reader_data_topBC.idfield"          "ID"  
+          "reader_data_topBC.tStart"           "${startDate}"
+          "reader_data_topBC.tEnd"             "${endDate}"
+          "reader_data_topBC.tTimestep"        "${tTimestep}"
+          "reader_data_topBC.fileNovalue"      "-9999"
+          
+          // parameters reader data input bottom boundary condition
+          "reader_data_bottomBC.file"             "$oms_prj//data/BOTTOM_formatted.csv"
+          "reader_data_bottomBC.idfield"          "ID"  
+          "reader_data_bottomBC.tStart"           "${startDate}"
+          "reader_data_bottomBC.tEnd"             "${endDate}"
+          "reader_data_bottomBC.tTimestep"        "${tTimestep}"
+          "reader_data_bottomBC.fileNovalue"      "-9999"
+          
+          // percorso del file con le condizioni iniziali
+          "read_iC.filePath" "$oms_prj/data/InitialConditionHydrostatic.csv"
+          
+          // Percorso dei file di output 
+          "solver.dir" "$oms_prj/Studente00"
+        }
+        
+        connect{
+          "read_iC.depth" "solver.depth"
+          
+          "read_iC.suctionIC" "solver.iC"
+          
+          "reader_data_topBC.outData" "solver.inTopBC"
+          
+          "reader_data_bottomBC.outData" "solver.inBottomBC"
+          
+          "reader_data_topBC.tCurrent" "solver.inCurrentDate"
+        }
+    }
+}

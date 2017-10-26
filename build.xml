@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="OMSRichards1D24Maggio" default="all" basedir=".">
+    <description>
+       Manages the project 'OMSRichards1D24Maggio'.
+       Created at Wed May 24 17:16:40 CEST 2017.
+    </description>
+    <import file=".oms/project.xml"/>
+</project>
