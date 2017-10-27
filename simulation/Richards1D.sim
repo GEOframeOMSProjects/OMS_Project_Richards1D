@@ -105,7 +105,7 @@ resource "$oms_prj/lib"
           "reader_data_topBC.fileNovalue"      "-9999"
           
           // parameters reader data input bottom boundary condition
-          "reader_data_bottomBC.file"             "$oms_prj//data/Trento_BottomBC.csv"
+          "reader_data_bottomBC.file"             "$oms_prj//data/Trento_BottomBC_0.csv"
           "reader_data_bottomBC.idfield"          "ID"  
           "reader_data_bottomBC.tStart"           "${startDate}"
           "reader_data_bottomBC.tEnd"             "${endDate}"
