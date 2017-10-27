@@ -1,9 +1,9 @@
 /*
- * Solutore per il problema di Richards 1D
- *   condizione iniziale per la suzione del suolo assegnata dall'utente
- *   condizioni al contorno sulla suzione assegnata dall'utente
+ * Solver for Richards' equation 1D
+ *   water pressure initial condition is assigned by the user
+ *   boundary conditions assigned by the user
  *   
- * 	 metodo numerico Nested Newton 
+ * 	 Numerical scheme: 
  * 	 	Casulli, Vincenzo, and Paola Zanolli. 
  * 	 	"A nested Newton-type algorithm for finite volume methods solving Richards' equation in mixed form." 
  * 	 	SIAM Journal on Scientific Computing 32.4 (2010): 2255-2273.
@@ -13,13 +13,13 @@ def home = oms_prj
 
 // start and end date of the simulation
 
-def startDate= "2016-10-08 00:00"
+def startDate= "2017-01-01 00:00"
 
 
-def endDate="2016-10-14 00:00"
+def endDate="2017-05-24 00:00"
 
-
-def tTimestep = 5 // espresso in minuti 
+// time interval of temporal series [minutes]
+def tTimestep = 5 
 
 
 OMS3.sim {
@@ -40,63 +40,64 @@ resource "$oms_prj/lib"
         }
         
         parameter {
-           // conducibilità idraulica a saturazione [m/s]
+           // hydraulic conductivity at saturation [m/s]
            "solver.ks" "0.000000556"
           
-          // contenuto d'acqua adimensionale a saturazione
+          // dimensionless water content at saturation [-]
           "solver.thetaS" "0.38"
           
-          // contenuto d'acqua adimensionale residuo
+          // dimensionless residual water content [-]
           "solver.thetaR" "0.068"
           
-          // parametri del modello di Van Genuchten
+          // parameters of Van Genuchten's SWRC model (Van Genuchten, 1980)
           "solver.n" "1.09"
           "solver.alpha" "0.8"  // [1/m]
           
-          // parametri del modello di Brooks and Corey
+          // parameters of Brooks' and Corey's SWRC model (Brooks and Corey, 1964)
           "solver.psiE" "1.9"  // [m]
           "solver.lambda" "1.9"
           
-          // parametri del modello di Kosugi con distribuzione unimodale
-          // valore della mediana della distribuzione dei pori [m]
+          // parameters of two-paramaters lognormal distribution 
+          // for SWRC model (Kosugi, 1996)
+          // median of the pore size distribution [m]
           "solver.rMedian" "0.0000020781"
-          // deviazione standard della distribuzione dei pori 
+          // standard deviation of the pore size distribution 
           "solver.sigma" "0.6"            
           
-          // scelta del modello per la SWRC:
-          // - Van Genuchten;
-          // - Kosugi;
-          // - Brooks and Corey;
+          // Available SWRC models:
+          // - "Van Genuchten"
+          // - "Kosugi"
+          // - "Brooks and Corey"
           "solver.soilHydraulicModel" "Van Genuchten"
           
-          // scelta della condizione al contorno alla superficie:
-          // - Top Dirichlet assegno il valore della suzione
-          // - Top Neumann assegno il valore del flusso 
+          // Type of the top boundary condition:
+          // - "Top Dirichlet" the water pressure value is assigned
+          // - "Top Neumann" the water flux through the soil surface is assigned
           "solver.topBCType"  "Top Dirichlet";
 		  
-		  // scelta della condizione al contorno al fondo:
-          // - Bottom Dirichlet assegno il valore della suzione
-          // - Bottom Free Drainage 
+		  // Type of the bottom boundary condition:
+          // - "Bottom Dirichlet" the water pressure value is assigned
+          // - "Bottom Free Drainage" the water flux is controlled only
+          //                          by the gravitational gradient 
 		  "solver.bottomBCType"  "Bottom Dirichlet";
 		  
-          // Altezza della colonna di suolo [m]
+          // Height of the soil column [m]
           "solver.spaceBottom" "2.0"
           
-          // Tolleranza per il metodo Nested Newton
+          // nested Newton tolerance, range(10^(-3) ;  10^(-14))
           "solver.newtonTolerance" "0.00000001"
           
-          // Algoritmo per la soluzione:
-          // - 0 --> metodo di Newton, si ha solo l'outer iteration
-          // - 1 --> nested Newton: si applica il metodo di Newton
-          //		  due volte, un ciclo annidiato nell'altro.
-          //          In questo caso si ha un outer iteration e un inner iteration
+          // Algorithm to solve the nonlinear system:
+          // - 0 --> Newton's method
+          // - 1 --> nested Newton: 
           "solver.nestedNewton" "1"
           
-          // time step [s]
-          "solver.tTimestep" "10"
+          // time step [s], it must be consistent
+          // with tTimestep defined at line 22
+          "solver.tTimestep" "300"
 		  
           // parameters reader data input top boundary condition
-          "reader_data_topBC.file"             "$oms_prj//data/TOP_formatted.csv"
+          "reader_data_topBC.file"             "$oms_prj//data/Trento_TopBC.csv"
           "reader_data_topBC.idfield"          "ID"  
           "reader_data_topBC.tStart"           "${startDate}"
           "reader_data_topBC.tEnd"             "${endDate}"
@@ -104,18 +105,18 @@ resource "$oms_prj/lib"
           "reader_data_topBC.fileNovalue"      "-9999"
           
           // parameters reader data input bottom boundary condition
-          "reader_data_bottomBC.file"             "$oms_prj//data/BOTTOM_formatted.csv"
+          "reader_data_bottomBC.file"             "$oms_prj//data/Trento_BottomBC.csv"
           "reader_data_bottomBC.idfield"          "ID"  
           "reader_data_bottomBC.tStart"           "${startDate}"
           "reader_data_bottomBC.tEnd"             "${endDate}"
           "reader_data_bottomBC.tTimestep"        "${tTimestep}"
           "reader_data_bottomBC.fileNovalue"      "-9999"
           
-          // percorso del file con le condizioni iniziali
+          // file path for the initial condition
           "read_iC.filePath" "$oms_prj/data/InitialConditionHydrostatic.csv"
           
-          // Percorso dei file di output 
-          "solver.dir" "$oms_prj/Studente00"
+          // folder path for the output files
+          "solver.dir" "$oms_prj/output"
         }
         
         connect{
