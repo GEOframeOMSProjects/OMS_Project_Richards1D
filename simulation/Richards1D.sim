@@ -35,7 +35,7 @@ resource "$oms_prj/lib"
            "reader_data_topBC"    "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
            "reader_data_bottomBC" "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
         
-           "read_iC" "readTxt.ReadTxtMultiColumn"
+           "read_iC" "richards_classes.ReadCsvTwoColumns"
         
         }
         
@@ -79,7 +79,9 @@ resource "$oms_prj/lib"
           // - "Bottom Dirichlet" the water pressure value is assigned
           // - "Bottom Free Drainage" the water flux is controlled only
           //                          by the gravitational gradient 
-		  "solver.bottomBCType"  "Bottom Dirichlet";
+          // - "Bottom Impervious" there is no water flux through the 
+          //						domain bottom
+		  "solver.bottomBCType"  "Bottom Impervious";
 		  
           // Height of the soil column [m]
           "solver.spaceBottom" "2.0"
