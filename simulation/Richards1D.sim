@@ -36,6 +36,7 @@ resource "$oms_prj/lib"
            "reader_data_bottomBC" "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
         
            "read_iC" "richards_classes.ReadCsvTwoColumns"
+           "read_sourceSink" "richards_classes.ReadCsvTwoColumns"
         
         }
         
@@ -116,6 +117,9 @@ resource "$oms_prj/lib"
           
           // file path for the initial condition
           "read_iC.filePath" "$oms_prj/data/InitialConditionHydrostatic.csv"
+         
+          // file path for the source/sink term
+          "read_sourceSink.filePath" "$oms_prj/data/SourceSink_0.csv"
           
           // folder path for the output files
           "solver.dir" "$oms_prj/output"
@@ -124,7 +128,9 @@ resource "$oms_prj/lib"
         connect{
           "read_iC.depth" "solver.depth"
           
-          "read_iC.suctionIC" "solver.iC"
+          "read_iC.variable" "solver.iC"
+          
+          "read_sourceSink.variable" "solver.sourceSink"
           
           "reader_data_topBC.outData" "solver.inTopBC"
           
