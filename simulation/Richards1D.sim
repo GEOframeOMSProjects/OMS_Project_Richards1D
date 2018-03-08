@@ -13,13 +13,13 @@ def home = oms_prj
 
 // start and end date of the simulation
 
-def startDate= "2017-01-01 00:00"
+def startDate= "1991-09-18 00:00"
 
 
-def endDate="2017-05-24 00:00"
+def endDate="1991-09-19 00:00"
 
 // time interval of temporal series [minutes]
-def tTimestep = 5 
+def tTimestep = 1440 
 
 
 OMS3.sim {
@@ -42,17 +42,17 @@ resource "$oms_prj/lib"
         
         parameter {
            // hydraulic conductivity at saturation [m/s]
-           "solver.ks" "0.000000556"
+           "solver.ks" "0.00000722"
           
           // dimensionless water content at saturation [-]
-          "solver.thetaS" "0.38"
+          "solver.thetaS" "0.35"
           
           // dimensionless residual water content [-]
-          "solver.thetaR" "0.068"
+          "solver.thetaR" "0.02"
           
           // parameters of Van Genuchten's SWRC model (Van Genuchten, 1980)
-          "solver.n" "1.09"
-          "solver.alpha" "0.8"  // [1/m]
+          "solver.n" "1.964"
+          "solver.alpha" "0.041"  // [1/m]
           
           // parameters of Brooks' and Corey's SWRC model (Brooks and Corey, 1964)
           "solver.psiE" "1.9"  // [m]
@@ -82,10 +82,15 @@ resource "$oms_prj/lib"
           //                          by the gravitational gradient 
           // - "Bottom Impervious" there is no water flux through the 
           //						domain bottom
-		  "solver.bottomBCType"  "Bottom Impervious";
+		  "solver.bottomBCType"  "Bottom Dirichlet";
 		  
           // Height of the soil column [m]
           "solver.spaceBottom" "2.0"
+		  
+		  // Slope angle [degree]
+		  // - 0 the soil surface is horizontal, the flow is vertical
+		  // - 90 the soil surface is vertical, the flow is horizontal
+		  "solver.delta" "0"
           
           // nested Newton tolerance, range(10^(-3) ;  10^(-14))
           "solver.newtonTolerance" "0.00000001"
@@ -97,10 +102,14 @@ resource "$oms_prj/lib"
           
           // time step [s], it must be consistent
           // with tTimestep defined at line 22
-          "solver.tTimestep" "300"
+          "solver.tTimestep" tTimestep
+		  
+		  // time step used to integrate the equation,
+		  // this is the Delta t used in the numerical scheme
+		  "solver.timeDelta" "300"
 		  
           // parameters reader data input top boundary condition
-          "reader_data_topBC.file"             "$oms_prj//data/Trento_TopBC.csv"
+          "reader_data_topBC.file"             "$oms_prj//data/TopBoundaryCondition_0.csv"
           "reader_data_topBC.idfield"          "ID"  
           "reader_data_topBC.tStart"           "${startDate}"
           "reader_data_topBC.tEnd"             "${endDate}"
@@ -108,13 +117,18 @@ resource "$oms_prj/lib"
           "reader_data_topBC.fileNovalue"      "-9999"
           
           // parameters reader data input bottom boundary condition
-          "reader_data_bottomBC.file"             "$oms_prj//data/Trento_BottomBC_0.csv"
+          "reader_data_bottomBC.file"             "$oms_prj//data/BottomBoundaryCondition_0.csv"
           "reader_data_bottomBC.idfield"          "ID"  
           "reader_data_bottomBC.tStart"           "${startDate}"
           "reader_data_bottomBC.tEnd"             "${endDate}"
           "reader_data_bottomBC.tTimestep"        "${tTimestep}"
           "reader_data_bottomBC.fileNovalue"      "-9999"
           
+		  // Angle [degree] with the vertical direction
+		  // - 0 the soil column is aligned with the vertical direction
+		  // - 90 the soil column is horizontal
+		  "solver.delta" "0"
+		  
           // file path for the initial condition
           "read_iC.filePath" "$oms_prj/data/InitialConditionHydrostatic.csv"
          
