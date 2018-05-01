@@ -1,0 +1,183 @@
+/*
+ * Solver for Richards' equation 1D
+ *   water pressure initial condition is assigned by the user
+ *   boundary conditions assigned by the user
+ *   
+ * 	 Numerical scheme: 
+ * 	 	Casulli, Vincenzo, and Paola Zanolli. 
+ * 	 	"A nested Newton-type algorithm for finite volume methods solving Richards' equation in mixed form." 
+ * 	 	SIAM Journal on Scientific Computing 32.4 (2010): 2255-2273.
+ */
+import static oms3.SimBuilder.instance as OMS3
+import static oms3.SimBuilder.*
+def home = oms_prj
+
+// start and end date of the simulation
+
+def startDate= "2017-01-01 00:00"
+
+
+def endDate="2017-01-02 00:05"
+
+// time interval of temporal series [minutes]
+def tTimestep = 5 
+
+
+solver = OMS3.sim(name: "Integrate PDE", {
+
+resource "$oms_prj/lib"
+    
+    //model() {
+    model(while : "reader_data_topBC.doProcess"  ){
+    	
+        components {
+           
+           "solver" "Richards1DSolver.Richards1DSolver"
+           
+           "reader_data_topBC"    "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+           "reader_data_bottomBC" "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+        
+           "read_iC" "richards_classes.ReadCsvTwoColumns"
+           "read_sourceSink" "richards_classes.ReadCsvTwoColumns"
+           
+
+           "buffer" "bufferWriter.Buffer1D"
+       
+           "writeNetCDF" "monodimensionalProblemTimeDependent.WriteNetCDFRichards1D"
+        
+        }
+        
+        parameter {
+           // hydraulic conductivity at saturation [m/s]
+           "solver.ks" "0.000017"//"0.00000722"
+          
+          // dimensionless water content at saturation [-]
+          "solver.thetaS" "0.5"//"0.35"
+          
+          // dimensionless residual water content [-]
+          "solver.thetaR" "0.02"
+          
+          // parameters of Van Genuchten's SWRC model (Van Genuchten, 1980)
+          "solver.n" "1.16"//"1.964"
+          "solver.alpha" "5.88"//"0.041"  // [1/m]
+          
+          // parameters of Brooks' and Corey's SWRC model (Brooks and Corey, 1964)
+          "solver.psiE" "1.9"  // [m]
+          "solver.lambda" "1.9"
+          
+          // parameters of two-paramaters lognormal distribution 
+          // for SWRC model (Kosugi, 1996)
+          // median of the pore size distribution [m]
+          "solver.rMedian" "0.0000020781"
+          // standard deviation of the pore size distribution 
+          "solver.sigma" "0.6"            
+          
+          // Available SWRC models:
+          // - "Van Genuchten"
+          // - "Kosugi"
+          // - "Brooks and Corey"
+          "solver.soilHydraulicModel" "Van Genuchten"
+          
+          // Type of the top boundary condition:
+          // - "Top Neumann" the water flux through the soil surface is assigned
+          "solver.topBCType"  "Top Neumann";
+		  
+		  // Type of the bottom boundary condition:
+          // - "Bottom Dirichlet" the water pressure value is assigned
+          // - "Bottom Free Drainage" the water flux is controlled only
+          //                          by the gravitational gradient 
+          // - "Bottom Impervious" there is no water flux through the 
+          //						domain bottom
+		  "solver.bottomBCType"  "Bottom Dirichlet";
+		  
+          // Height of the soil column [m]
+          "solver.spaceBottom" "2.0"
+		  
+		  // Slope angle [degree]
+		  // - 0 the soil surface is horizontal, the flow is vertical
+		  // - 90 the soil surface is vertical, the flow is horizontal
+		  //"solver.delta" "0"
+          
+          // nested Newton tolerance, range(10^(-3) ;  10^(-14))
+          "solver.newtonTolerance" "0.00000000000001"
+          
+          // Algorithm to solve the nonlinear system:
+          // - 0 --> Newton's method
+          // - 1 --> nested Newton: 
+          "solver.nestedNewton" "1"
+          
+          // time step [s], it must be consistent
+          // with tTimestep defined at line 22
+          "solver.tTimestep" tTimestep
+		  
+		  // time step used to integrate the equation,
+		  // this is the Delta t used in the numerical scheme
+		  "solver.timeDelta" "50"
+		  
+          // parameters reader data input top boundary condition
+          "reader_data_topBC.file"             "$oms_prj//data/Trento_2Gradini.csv"
+          "reader_data_topBC.idfield"          "ID"  
+          "reader_data_topBC.tStart"           "${startDate}"
+          "reader_data_topBC.tEnd"             "${endDate}"
+          "reader_data_topBC.tTimestep"        "${tTimestep}"
+          "reader_data_topBC.fileNovalue"      "-9999"
+          
+          // parameters reader data input bottom boundary condition
+          "reader_data_bottomBC.file"             "$oms_prj//data/TrentoBottom.csv"
+          "reader_data_bottomBC.idfield"          "ID"  
+          "reader_data_bottomBC.tStart"           "${startDate}"
+          "reader_data_bottomBC.tEnd"             "${endDate}"
+          "reader_data_bottomBC.tTimestep"        "${tTimestep}"
+          "reader_data_bottomBC.fileNovalue"      "-9999"
+          
+		  // Angle [degree] with the vertical direction
+		  // - 0 the soil column is aligned with the vertical direction
+		  // - 90 the soil column is horizontal
+		  "solver.delta" "0"
+		  
+          // file path for the initial condition
+          "read_iC.filePath" "$oms_prj/data/InitialConditionHydrostaticPonding.csv"
+         
+          // file path for the source/sink term
+          "read_sourceSink.filePath" "$oms_prj/data/SourceSink0.csv"
+          
+          // folder path for the output files
+          "solver.dir" "$oms_prj/output"
+          
+          "writeNetCDF.fileName" "$oms_prj//output/OMSTest1.nc"
+          "writeNetCDF.briefDescritpion" "aaaaaa"
+          
+        }
+        
+        connect{
+          "read_iC.depth" "solver.depth"
+          
+          "read_iC.variable" "solver.iC"
+          
+          "read_sourceSink.variable" "solver.sourceSink"
+          
+          "reader_data_topBC.outData" "solver.inTopBC"
+          
+          "reader_data_bottomBC.outData" "solver.inBottomBC"
+          
+          "reader_data_topBC.tCurrent" "solver.inCurrentDate"
+          
+          "solver.outputToBuffer" "buffer.inputVariable"
+          
+          "solver.depth" "buffer.inputSpatialCoordinate"
+          
+          "solver.inCurrentDate" "buffer.inputDate"
+          
+          "buffer.myVariable" "writeNetCDF.myVariables"
+          
+          "buffer.mySpatialCoordinate" "writeNetCDF.mySpatialCoordinate"
+          
+          "reader_data_topBC.doProcess" "writeNetCDF.doProcess"
+        }
+    }
+    
+    
+    
+}
+
+)
