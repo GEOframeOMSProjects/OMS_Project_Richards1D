@@ -86,11 +86,6 @@ resource "$oms_prj/lib"
 		  
           // Height of the soil column [m]
           "solver.spaceBottom" "2.0"
-		  
-		  // Slope angle [degree]
-		  // - 0 the soil surface is horizontal, the flow is vertical
-		  // - 90 the soil surface is vertical, the flow is horizontal
-		  "solver.delta" "0"
           
           // nested Newton tolerance, range(10^(-3) ;  10^(-14))
           "solver.newtonTolerance" "0.00000001"
