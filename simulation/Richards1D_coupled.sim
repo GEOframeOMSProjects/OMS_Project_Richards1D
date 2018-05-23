@@ -14,10 +14,10 @@ def home = oms_prj
 
 // start and end date of the simulation
 
-def startDate= "2018-03-05 00:00"
+def startDate= "2017-01-01 00:00"
 
 
-def endDate="2018-03-11 19:15"
+def endDate="2017-01-15 00:00"
 
 // time interval of temporal series [minutes]
 def tTimestep = 5 
@@ -53,13 +53,13 @@ resource "$oms_prj/lib"
         parameter {
         
           // File path of grid.nc file, the file created with RichardsMeshGen.ipynb	
-          "readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/ClaySand_noPonding.nc"
+          "readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/Casulli2010_test2.nc"
          
           // Available SWRC models:
           // - "Van Genuchten"
           // - "Kosugi"
-          // - "Brooks and Corey"
-          "solver.soilHydraulicModel" "Van Genuchten"
+          // - "Brooks Corey"
+          "solver.soilHydraulicModel" "Brooks Corey"
           
           // Angle [degree] with the vertical direction
 		  // - 0 the soil column is aligned with the vertical direction
@@ -85,7 +85,7 @@ resource "$oms_prj/lib"
           // - "max" maximum between i and i+1 (suggested)
           // - "min" minimum between i and i+1 (not suggested)
           // - "weighted average" average between i and i+1, weights are control volumes lengths
-		  "solver.interfaceHydraulicCondType" "mean"
+		  "solver.interfaceHydraulicCondType" "max"
           
           // nested Newton tolerance, range(10^(-3) ;  10^(-14))
           "solver.newtonTolerance" "0.000000000001"
@@ -101,10 +101,10 @@ resource "$oms_prj/lib"
 		  
 		  // time step used to integrate the equation,
 		  // this is the Delta t used in the numerical scheme
-		  "solver.timeDelta" "20"
+		  "solver.timeDelta" "100"
 		  
           // parameters reader data input top boundary condition
-          "reader_data_topBC.file"             "$oms_prj//data/Timeseries/Trento7gg.csv"
+          "reader_data_topBC.file"             "$oms_prj//data/Timeseries/TestAll_0.csv"
           "reader_data_topBC.idfield"          "ID"  
           "reader_data_topBC.tStart"           "${startDate}"
           "reader_data_topBC.tEnd"             "${endDate}"
@@ -112,7 +112,7 @@ resource "$oms_prj/lib"
           "reader_data_topBC.fileNovalue"      "-9999"
           
           // parameters reader data input bottom boundary condition
-          "reader_data_bottomBC.file"             "$oms_prj//data/Timeseries/Trento7ggBottom.csv"
+          "reader_data_bottomBC.file"             "$oms_prj//data/Timeseries/TestAll_0.csv"
           "reader_data_bottomBC.idfield"          "ID"  
           "reader_data_bottomBC.tStart"           "${startDate}"
           "reader_data_bottomBC.tEnd"             "${endDate}"
@@ -120,10 +120,10 @@ resource "$oms_prj/lib"
           "reader_data_bottomBC.fileNovalue"      "-9999"
           	           
           // folder path for the output files
-          "writeNetCDF.fileName" "$oms_prj//output/ClaySand_noPonding_TrentoRain_BottomDirichlet.nc"
+          "writeNetCDF.fileName" "$oms_prj//output/Casulli2010_test2_noRain_bottomDirichlet_100s_max.nc"
           
           // here you can enter a string to describe your simulation
-          "writeNetCDF.briefDescritpion" "2 layer of clay and sand \n Grid input file: $oms_prj//data/Grid_NEtCDF/ClaySand_noPonding.nc \n TopBC input file: $oms_prj//data/Timeseries/Trento7gg.csv \n BottomBC input file: $oms_prj//data/Timeseries/Trento7ggBottom.csv, timeDelta = 20, interface k: mean"
+          "writeNetCDF.briefDescritpion" "Casulli 2010, test 2 Simulazione con i parametri dell'articolo (Brooks and Corey)\n Grid input file: $oms_prj//data/Grid_NEtCDF/Casulli2010_test2.nc \n TopBC input file: $oms_prj//data/Timeseries/TestAll_0.csv \n BottomBC input file: $oms_prj//data/Timeseries/TestAll_0.csv, timeDelta = 100, interface k: max"
           
         }
         
