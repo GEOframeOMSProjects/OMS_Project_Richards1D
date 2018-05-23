@@ -14,10 +14,10 @@ def home = oms_prj
 
 // start and end date of the simulation
 
-def startDate= "2017-01-01 00:00"
+def startDate= "2018-03-05 00:00"
 
 
-def endDate="2017-01-03 00:00"
+def endDate="2018-03-11 19:15"
 
 // time interval of temporal series [minutes]
 def tTimestep = 5 
@@ -53,7 +53,7 @@ resource "$oms_prj/lib"
         parameter {
         
           // File path of grid.nc file, the file created with RichardsMeshGen.ipynb	
-          "readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/Clay_noPonding.nc"
+          "readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/ClaySand_noPonding.nc"
          
           // Available SWRC models:
           // - "Van Genuchten"
@@ -76,12 +76,13 @@ resource "$oms_prj/lib"
           //                          by the gravitational gradient 
           // - "Bottom Impervious" there is no water flux through the 
           //						domain bottom
-          // 
-		  "solver.bottomBCType"  "Bottom neumann";
+          // - "Bottom Neumann" you prescribe the water flux through the 
+          //						domain bottom (positive: inflow, negative: ouflow)
+		  "solver.bottomBCType"  "Bottom dirichlet";
 		  
 		  // Interface hydraulic conductivity can be computed as:
-          // - "mean" arithmetic average between i and i+1
-          // - "max" maximum between i and i+1
+          // - "mean" arithmetic average between i and i+1 (suggested)
+          // - "max" maximum between i and i+1 (suggested)
           // - "min" minimum between i and i+1 (not suggested)
           // - "weighted average" average between i and i+1, weights are control volumes lengths
 		  "solver.interfaceHydraulicCondType" "mean"
@@ -91,19 +92,19 @@ resource "$oms_prj/lib"
           
           // Algorithm to solve the nonlinear system:
           // - 0 --> Newton's method
-          // - 1 --> nested Newton: 
+          // - 1 --> nested Newton (suggested)
           "solver.nestedNewton" "1"
           
           // time step [s], it must be consistent
           // with tTimestep defined at line 22
-          "solver.tTimestep" 300
+          "solver.tTimestep" tTimestep*60
 		  
 		  // time step used to integrate the equation,
 		  // this is the Delta t used in the numerical scheme
-		  "solver.timeDelta" "10"
+		  "solver.timeDelta" "20"
 		  
           // parameters reader data input top boundary condition
-          "reader_data_topBC.file"             "$oms_prj//data/Timeseries/TestAll_0.csv"
+          "reader_data_topBC.file"             "$oms_prj//data/Timeseries/Trento7gg.csv"
           "reader_data_topBC.idfield"          "ID"  
           "reader_data_topBC.tStart"           "${startDate}"
           "reader_data_topBC.tEnd"             "${endDate}"
@@ -111,7 +112,7 @@ resource "$oms_prj/lib"
           "reader_data_topBC.fileNovalue"      "-9999"
           
           // parameters reader data input bottom boundary condition
-          "reader_data_bottomBC.file"             "$oms_prj//data/Timeseries/TestAll_2_BottomNeumann.csv"
+          "reader_data_bottomBC.file"             "$oms_prj//data/Timeseries/Trento7ggBottom.csv"
           "reader_data_bottomBC.idfield"          "ID"  
           "reader_data_bottomBC.tStart"           "${startDate}"
           "reader_data_bottomBC.tEnd"             "${endDate}"
@@ -119,11 +120,11 @@ resource "$oms_prj/lib"
           "reader_data_bottomBC.fileNovalue"      "-9999"
           	           
           // folder path for the output files
-          "writeNetCDF.fileName" "$oms_prj//output/Clay_noPonding_noRain_2mmBottomNeumann.nc"
-          //"writeNetCDF.fileName" "C:/Users/Niccolo/Desktop/SandPondingOMS.nc"
+          "writeNetCDF.fileName" "$oms_prj//output/ClaySand_noPonding_TrentoRain_BottomDirichlet.nc"
+          
           // here you can enter a string to describe your simulation
-          "writeNetCDF.briefDescritpion" "1 layer of clay \n Grid input file: $oms_prj//data/Grid_NEtCDF/Clay_noPonding.nc \n TopBC input file: $oms_prj//data/Timeseries/TestAll_0.csv \n BottomBC input file: $oms_prj//data/Timeseries/TestAll_2_BottomNeumann.csv, timeDelta = 10, interface k: mean"
-          //"writeNetCDF.briefDescritpion" "1 layer of sand \n Grid input file: $oms_prj//data/Grid_NEtCDF/Sand_01Ponding.nc \n TopBC input file: $oms_prj//data/Timeseries/TestAll_0.csv \n BottomBC input file: $oms_prj//data/Timeseries/TestAll_0.csv, timeDelta = 10, interface k: mean"
+          "writeNetCDF.briefDescritpion" "2 layer of clay and sand \n Grid input file: $oms_prj//data/Grid_NEtCDF/ClaySand_noPonding.nc \n TopBC input file: $oms_prj//data/Timeseries/Trento7gg.csv \n BottomBC input file: $oms_prj//data/Timeseries/Trento7ggBottom.csv, timeDelta = 20, interface k: mean"
+          
         }
         
         connect{
