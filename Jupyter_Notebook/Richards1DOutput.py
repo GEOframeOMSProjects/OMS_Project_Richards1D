@@ -135,7 +135,7 @@ def showInitialCondition(iC,depths,ncfile,labelSize,titleSize,legendSize,axisTic
 
     plt.figure(figsize=(figureSizeHeigth,figureSizeWidth))
 
-    plt.scatter(iC,depths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    plt.plot(iC,depths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
     plt.title('Initial condition',fontsize=titleSize)
     # use variable attributes to label axis
     plt.xlabel(ncfile.variables['psi'].long_name + '  [' +ncfile.variables['psi'].units +']',fontsize=labelSize)
@@ -152,7 +152,7 @@ def showWaterSuction(timeIndex,psi,depths,time,ncfile,labelSize,titleSize,legend
     date = datetime.datetime.fromtimestamp(time[timeIndex])
     plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
 
-    plt.scatter(psi[timeIndex],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    plt.plot(psi[timeIndex],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
     # convert time value in a human readable date to title the plot
     plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
     # use variable attributes to label axis
@@ -171,7 +171,7 @@ def showWaterSuctionWithBCs(timeIndex,psi,depths,topBC_DF,bottomBC_DF,time,ncfil
     plt.figure(figsize=(figureSizeWidth1,figureSizeHeigth1))
     
     axp = plt.subplot2grid((4, 6), (0, 0), rowspan=4, colspan=2)
-    axp.scatter(psi[timeIndex],depths[:],linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    axp.plot(psi[timeIndex],depths[:],linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
     axp.set_xlabel(ncfile.variables['psi'].long_name + '  [' +ncfile.variables['psi'].units +']',fontsize=labelSize)
     axp.set_ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize)
     axp.set_title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
@@ -208,7 +208,7 @@ def showHydraulicHead(timeIndex,psi,depths,time,ncfile,labelSize,titleSize,legen
     date = datetime.datetime.fromtimestamp(time[timeIndex])
     plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
     
-    plt.scatter(psi[timeIndex]+depths[:]-depths[0],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    plt.plot(psi[timeIndex]+depths[:]-depths[0],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
     # convert time value in a human readable date to title the plot
     plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
     # use variable attributes to label axis
@@ -225,7 +225,7 @@ def showWaterContent(timeIndex,theta,depths,data,time,ncfile,labelSize,titleSize
     date = datetime.datetime.fromtimestamp(time[timeIndex])
     fig, ax=plt.subplots(figsize=(figureSizeWidth,figureSizeHeigth))
     figsize=(20,20)
-    ax.scatter(theta[timeIndex,0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='r')
+    ax.plot(theta[timeIndex,0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='r')
     waterLevel=theta[timeIndex,depths[:].shape[0]-1]
     ax.axhline(y=waterLevel, color='deepskyblue',linewidth=lineWidth,)
     
@@ -265,7 +265,7 @@ def showWaterContentWithBCs(timeIndex,theta,depths,bottomBC_DF,topBC_DF,data,tim
     plt.figure(figsize=(figureSizeWidth1,figureSizeHeigth1))
     
     axp = plt.subplot2grid((4, 6), (0, 0), rowspan=4, colspan=2)
-    axp.scatter(theta[timeIndex,0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='r')
+    axp.plot(theta[timeIndex,0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='r')
     axp.axhline(y=theta[timeIndex,depths[:].shape[0]-1], color='deepskyblue',linewidth=lineWidth, linestyle='-')
     for i in range(1,np.size(data.index)-1):
         if data['Type'][i] == 'L':
@@ -319,7 +319,7 @@ def showVelocities(timeIndex,velocities,dualDepths,time,ncfile,labelSize,titleSi
     date = datetime.datetime.fromtimestamp(time[timeIndex])
     plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
 
-    plt.scatter(velocities[timeIndex],dualDepths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    plt.plot(velocities[timeIndex],dualDepths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
     # convert time value in a human readable date to title the plot
     plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
     # use variable attributes to label axis
@@ -394,7 +394,7 @@ def show(timeIndex,psi,theta,velocities,depths,dualDepths,data,time,ncfile,label
             l = 'layer'
             p3.line([np.min(theta[timeIndex,0:np.size(theta[timeIndex,])-1])-0.001,np.max(theta[timeIndex,])+0.001], [data['eta'][i],data['eta'][i]], color=c,line_width=lineWidth-2,legend='Layer')
 
-    p3.legend.location = "bottom_left"
+    p3.legend.location = "bottom_right"
     p3.legend.label_text_font_size = str(legendSize) + "px"
     p3.legend.click_policy="hide"
     #p3.xaxis.axis_label = '\u03B8 [-]'
