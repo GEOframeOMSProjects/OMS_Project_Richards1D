@@ -55,7 +55,7 @@ def setPlotFeatures(labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineS
 def readRichardsOutputNetCDF(fileName):
     
     ## open netCDF file for reading.
-    ncfile = Dataset('Casulli2010_test2_noRain_bottomDirichlet_300s.nc','r') 
+    ncfile = Dataset(fileName,'r') 
     print ('*** SUCCESS reading')
     
     print('\n ***FILE INFO:\n')
