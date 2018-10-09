@@ -14,10 +14,10 @@ def home = oms_prj
 
 // start and end date of the simulation
 
-def startDate= "2017-01-01 00:00"
+def startDate= "2018-03-05 00:00"
 
 
-def endDate="2017-01-15 00:00"
+def endDate="2018-03-07 00:00"
 
 // time interval of temporal series [minutes]
 def tTimestep = 5 
@@ -53,13 +53,14 @@ resource "$oms_prj/lib"
         parameter {
         
           // File path of grid.nc file, the file created with RichardsMeshGen.ipynb	
-          "readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/Casulli2010_test2.nc"
+          "readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/1_ref.nc"
          
           // Available SWRC models:
           // - "Van Genuchten"
           // - "Kosugi"
           // - "Brooks Corey"
-          "solver.soilHydraulicModel" "Brooks Corey"
+          // - "Romano"
+          "solver.soilHydraulicModel" "Van Genuchten"
           
           // Angle [degree] with the vertical direction
 		  // - 0 the soil column is aligned with the vertical direction
@@ -77,18 +78,18 @@ resource "$oms_prj/lib"
           // - "Bottom Impervious" there is no water flux through the 
           //						domain bottom
           // - "Bottom Neumann" you prescribe the water flux through the 
-          //						domain bottom (positive: inflow, negative: ouflow)
-		  "solver.bottomBCType"  "Bottom dirichlet";
+          //						domain bottom (positive: inflow, negative: outflow)
+		  "solver.bottomBCType"  "Bottom free drainage"
 		  
 		  // Interface hydraulic conductivity can be computed as:
           // - "mean" arithmetic average between i and i+1 (suggested)
           // - "max" maximum between i and i+1 (suggested)
           // - "min" minimum between i and i+1 (not suggested)
           // - "weighted average" average between i and i+1, weights are control volumes lengths
-		  "solver.interfaceHydraulicCondType" "max"
+		  "solver.interfaceHydraulicCondType" "mean"
           
           // nested Newton tolerance, range(10^(-3) ;  10^(-14))
-          "solver.newtonTolerance" "0.000000000001"
+          "solver.newtonTolerance" "0.00000000001"
           
           // Algorithm to solve the nonlinear system:
           // - 0 --> Newton's method
@@ -101,10 +102,10 @@ resource "$oms_prj/lib"
 		  
 		  // time step used to integrate the equation,
 		  // this is the Delta t used in the numerical scheme
-		  "solver.timeDelta" "100"
+		  "solver.timeDelta" "300"
 		  
           // parameters reader data input top boundary condition
-          "reader_data_topBC.file"             "$oms_prj//data/Timeseries/TestAll_0.csv"
+          "reader_data_topBC.file"             "$oms_prj//data/Timeseries/Rain50mmh.csv"
           "reader_data_topBC.idfield"          "ID"  
           "reader_data_topBC.tStart"           "${startDate}"
           "reader_data_topBC.tEnd"             "${endDate}"
@@ -112,7 +113,7 @@ resource "$oms_prj/lib"
           "reader_data_topBC.fileNovalue"      "-9999"
           
           // parameters reader data input bottom boundary condition
-          "reader_data_bottomBC.file"             "$oms_prj//data/Timeseries/TestAll_0.csv"
+          "reader_data_bottomBC.file"             "$oms_prj//data/Timeseries/All_0.csv"
           "reader_data_bottomBC.idfield"          "ID"  
           "reader_data_bottomBC.tStart"           "${startDate}"
           "reader_data_bottomBC.tEnd"             "${endDate}"
@@ -120,10 +121,10 @@ resource "$oms_prj/lib"
           "reader_data_bottomBC.fileNovalue"      "-9999"
           	           
           // folder path for the output files
-          "writeNetCDF.fileName" "$oms_prj//output/Casulli2010_test2_noRain_bottomDirichlet_100s_max.nc"
+          "writeNetCDF.fileName" "$oms_prj//output/Output_1_ref.nc"
           
           // here you can enter a string to describe your simulation
-          "writeNetCDF.briefDescritpion" "Casulli 2010, test 2 Simulazione con i parametri dell'articolo (Brooks and Corey)\n Grid input file: $oms_prj//data/Grid_NEtCDF/Casulli2010_test2.nc \n TopBC input file: $oms_prj//data/Timeseries/TestAll_0.csv \n BottomBC input file: $oms_prj//data/Timeseries/TestAll_0.csv, timeDelta = 100, interface k: max"
+          "writeNetCDF.briefDescritpion" "grid 1_ref.nc, rain: 50mm/h, free drainage, integration time step 300s, interface hydraulic conductivity: mean "
           
         }
         
@@ -139,8 +140,14 @@ resource "$oms_prj/lib"
           "readNetCDF.thetaR"       "solver.thetaR"
           "readNetCDF.par1SWRC"     "solver.par1SWRC"
           "readNetCDF.par2SWRC"     "solver.par2SWRC"
-          "readNetCDF.par3SWRC"     "solver.alphaSpecificStorage"
-          "readNetCDF.par4SWRC"     "solver.betaSpecificStorage"
+          "readNetCDF.par3SWRC"     "solver.par3SWRC"
+          "readNetCDF.par4SWRC"     "solver.par4SWRC"
+          "readNetCDF.par5SWRC"     "solver.par5SWRC"
+          "readNetCDF.par6SWRC"     "solver.psiStar1"
+          "readNetCDF.par7SWRC"     "solver.psiStar2"
+          "readNetCDF.par8SWRC"     "solver.psiStar3"
+          "readNetCDF.alphaSS"      "solver.alphaSpecificStorage"
+          "readNetCDF.betaSS"      "solver.betaSpecificStorage"
           "readNetCDF.et"           "solver.et"
           
            

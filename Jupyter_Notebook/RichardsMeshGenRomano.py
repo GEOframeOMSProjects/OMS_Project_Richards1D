@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 24 17:54:52 2018
+Created on Wed Sept 26 08:30:52 2018
 
-This is used to create Richards 1D mesh using Van Genuchten SWRC
+This is used to create Richards 1D mesh using Romano et al. SWRC
 
 @author: Niccolo` Tubini and Riccardo Rigon
 @license: creative commons 4.0
 """
 import pandas as pd
 import numpy as np
+import math
 
 from netCDF4 import Dataset
 
@@ -303,14 +304,14 @@ def setParameters(data,eta):
             tempKs.append(data['Ks'][i])
             tempAlphaSS.append(data['alphaSpecificStorage'][i])
             tempBetaSS.append(data['betaSpecificStorage'][i])
-            tempPar1.append(data['n'][i])
-            tempPar2.append(data['alpha'][i])
-            tempPar3.append(-999.0)
-            tempPar4.append(-999.0)
-            tempPar5.append(-999.0)
-            tempPar6.append( -1/data['alpha'][i] * ( (data['n'][i]-1)/data['n'][i] )**(1/data['n'][i]) )
-            tempPar7.append(-999.0)
-            tempPar8.append(-999.0)
+            tempPar1.append(data['w'][i])
+            tempPar2.append(data['sigma1'][i])
+            tempPar3.append(data['sigma2'][i])
+            tempPar4.append(data['h1'][i])
+            tempPar5.append(data['h2'][i])
+            tempPar6.append(data['h1'][i]*math.exp(-(data['sigma1'][i])**2)) 
+            tempPar7.append(data['h2'][i]*math.exp(-(data['sigma2'][i])**2))
+            tempPar8.append(computePsiStar3(data['thetaR'][i],data['thetaS'][i],data['w'][i],data['sigma1'][i],data['sigma2'][i],data['h1'][i],data['h2'][i]))
             tempEt.append(data['et'][i])
             
      
@@ -337,6 +338,38 @@ def setParameters(data,eta):
         
     return [thetaS, thetaR, Ks, alphaSS, betaSS, par1SWRC, par2SWRC, par3SWRC, par4SWRC, par5SWRC,  par6SWRC,  par7SWRC,  par8SWRC,  et]
 
+def d2fRomano(h,thetaR,thetaS,w,sigma1,sigma2,h1,h2):
+    gamma1 = math.exp(-(math.log(h/h1)/(sigma1*math.sqrt(2)))**2)
+    gamma2 = math.exp(-(math.log(h/h1*h1/h2)/(sigma2*math.sqrt(2)))**2)
+    
+    return (-thetaR+thetaS)*1/(math.sqrt(2*math.pi)*(h/h1)**2)*( w/sigma1 * (1+math.log(h/h1)/sigma1**2)*gamma1 + (1-w)/sigma2*(1+math.log(h1/h2*h/h1)/sigma2**2)*gamma2 )
+                            
+def computePsiStar3(thetaR,thetaS,w,sigma1,sigma2,h1,h2):
+    h1Star = h1*math.exp(-sigma1**2) 
+    h2Star = h2*math.exp(-sigma2**2)
+
+    a = h2Star*1.5
+    b = h1Star/2
+    c = (a+b)/2
+
+    if d2fRomano(c,thetaR,thetaS,w,sigma1,sigma2,h1,h2)==0:
+        return c
+    else:
+        while (np.abs(b-a)>10**(-13)):
+            c=(a+b)/2
+        
+            if d2fRomano(c,thetaR,thetaS,w,sigma1,sigma2,h1,h2)==0:
+                return c
+            else:
+            
+                if d2fRomano(c,thetaR,thetaS,w,sigma1,sigma2,h1,h2)*d2fRomano(a,thetaR,thetaS,w,sigma1,sigma2,h1,h2)<0:
+                    b=c
+                if d2fRomano(c,thetaR,thetaS,w,sigma1,sigma2,h1,h2)*d2fRomano(b,thetaR,thetaS,w,sigma1,sigma2,h1,h2)<0:
+                    a=c
+
+    return c
+              
+
 '''
 plot parameters 
 This function allows to plot the distribution of SWRC parameters in the soil column.
@@ -344,7 +377,7 @@ This function allows to plot the distribution of SWRC parameters in the soil col
 These plots are drawn with bokeh library https://bokeh.pydata.org/en/latest/
 and they are interactive.
 '''
-def showParameters(thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage, n,alpha, psiStar,et,eta,labelSize,titleSize,axisTicksSize,lineWidth):
+def showParameters(thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage, w,sigma1,sigma2,h1,h2,et,eta,labelSize,titleSize,axisTicksSize,lineWidth):
     hover = HoverTool(tooltips=[
     ("(x,y)", "($x, $y)"),
     ])
@@ -388,83 +421,107 @@ def showParameters(thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage, n,
 
     p4 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p4.scatter(n, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p4.xaxis.axis_label = 'n [-] '
+    p4.scatter(w, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p4.xaxis.axis_label = 'w [-] '
     p4.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p4.yaxis.axis_label = '\u03b7 [m]'
     p4.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p4.title.text = 'Van Genuchten n'
+    p4.title.text = 'Romano et al. w'
     p4.title.align = "center"
     p4.title.text_font_size = str(titleSize) + "px"
-    tab4= Panel(child=p4, title="n")
+    tab4= Panel(child=p4, title="w")
 
     p5 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p5.scatter(alpha, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p5.xaxis.axis_label = '\u03B1 [m] '
+    p5.scatter(sigma1, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p5.xaxis.axis_label = '\u03C3_1 [m] '
     p5.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p5.yaxis.axis_label = '\u03b7 [m]'
     p5.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p5.title.text = 'Van Genuchten \u03B1'
+    p5.title.text = 'Romano et al. \u03C3_1'
     p5.title.align = "center"
     p5.title.text_font_size = str(titleSize) + "px"
-    tab5= Panel(child=p5, title="\u03B1")
+    tab5= Panel(child=p5, title="\u03C3_1")
     
     p6 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p6.scatter(psiStar, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p6.xaxis.axis_label = '\u03C8* [m] '
+    p6.scatter(sigma2, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p6.xaxis.axis_label = '\u03C3_2 [m] '
     p6.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p6.yaxis.axis_label = '\u03b7 [m]'
     p6.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p6.title.text = 'Van Genuchten \u03C8*'
+    p6.title.text = 'Romano et al. \u03C3_2'
     p6.title.align = "center"
     p6.title.text_font_size = str(titleSize) + "px"
-    tab6= Panel(child=p6, title="\u03C8*")
+    tab6= Panel(child=p6, title="\u03C3_2")
 
     p7 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p7.scatter(alphaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p7.xaxis.axis_label = '\u03b1SS [1/Pa]'
+    p7.scatter(h1, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p7.xaxis.axis_label = 'h_1 [m] '
     p7.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p7.yaxis.axis_label = '\u03b7 [m]'
     p7.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p7.title.text = 'Compressibility of soil'
+    p7.title.text = 'Romano et al. h_1'
     p7.title.align = "center"
     p7.title.text_font_size = str(titleSize) + "px"
-    tab7= Panel(child=p7, title="\u03b1SpecStor")
-
+    tab7= Panel(child=p7, title="h_1")
+    
     p8 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p8.scatter(betaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p8.xaxis.axis_label = '\u03b2SS [1/Pa]'
+    p8.scatter(h2, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p8.xaxis.axis_label = 'h_2 [m] '
     p8.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p8.yaxis.axis_label = '\u03b7 [m]'
     p8.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p8.title.text = 'Compressibility of water'
+    p8.title.text = 'Romano et al. h_2'
     p8.title.align = "center"
     p8.title.text_font_size = str(titleSize) + "px"
-    tab8= Panel(child=p8, title="\u03b2SpecStor")
-
+    tab8= Panel(child=p8, title="h_2")
+                            
     p9 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p9.scatter(et, eta,line_width=lineWidth, color="red")
-    p9.xaxis.axis_label = 'et coeff. [1/s]'
+    p9.scatter(alphaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p9.xaxis.axis_label = '\u03b1SS [1/Pa]'
     p9.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p9.yaxis.axis_label = '\u03b7 [m]'
     p9.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p9.title.text = 'Source sink term'
+    p9.title.text = 'Compressibility of soil'
     p9.title.align = "center"
     p9.title.text_font_size = str(titleSize) + "px"
-    tab9= Panel(child=p9, title="et")
+    tab9= Panel(child=p9, title="\u03b1SpecStor")
+
+    p10 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
+            title="Mouse over the dots" )
+    p10.scatter(betaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p10.xaxis.axis_label = '\u03b2SS [1/Pa]'
+    p10.xaxis.axis_label_text_font_size = str(labelSize) + "px"
+    p10.yaxis.axis_label = '\u03b7 [m]'
+    p10.yaxis.axis_label_text_font_size = str(labelSize) + "px"
+    p10.title.text = 'Compressibility of water'
+    p10.title.align = "center"
+    p10.title.text_font_size = str(titleSize) + "px"
+    tab10= Panel(child=p10, title="\u03b2SpecStor")
+
+    p11 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
+            title="Mouse over the dots" )
+    p11.scatter(et, eta,line_width=lineWidth, color="red")
+    p11.xaxis.axis_label = 'et coeff. [1/s]'
+    p11.xaxis.axis_label_text_font_size = str(labelSize) + "px"
+    p11.yaxis.axis_label = '\u03b7 [m]'
+    p11.yaxis.axis_label_text_font_size = str(labelSize) + "px"
+    p11.title.text = 'Source sink term'
+    p11.title.align = "center"
+    p11.title.text_font_size = str(titleSize) + "px"
+    tab11= Panel(child=p11, title="et")
     
-    tabs = Tabs(tabs=[ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 ])
+    tabs = Tabs(tabs=[ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 ])
     show(tabs)
     
 '''
 Save all grid data in a NetCDF file
 '''
-def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage,n,alpha,par3SWRC,par4SWRC,par5SWRC,psiStar,par7SWRC,par8SWRC,et,outputFileName,outputTitle,outputInstitution,outputSummary,folderPath,outputDate,inputFileName):
+def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage,w,sigma1,sigma2,h1,h2,psiStar1,psiStar2,psiStar3,et,outputFileName,outputTitle,outputInstitution,outputSummary,folderPath,outputDate,inputFileName):
         # the output array to write will be nx x ny
     dim = np.size(eta);
     dim1 = np.size(thetaS)
@@ -545,27 +602,27 @@ def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks
     ## enter the long_name of par1SWRC, as an example  Parameter n of Van Genuchten model
     dataPar1SWRC = ncfile.createVariable('par1SWRC','f8',('zz'))
     dataPar1SWRC.units = '-'
-    dataPar1SWRC.long_name = 'Parameter n of Van Genuchten model'
+    dataPar1SWRC.long_name = 'Parameter w of Romano et al. model'
     
     ## enter the long_name of par2SWRC, as an example  Parameter alpha of Van Genuchten model
     dataPar2SWRC = ncfile.createVariable('par2SWRC','f8',('zz'))
     dataPar2SWRC.units = 'm'
-    dataPar2SWRC.long_name = 'Parameter alpha of Van Genuchten model'
+    dataPar2SWRC.long_name = 'Parameter sigma1 of Romano et al. model'
     
     ## enter the long_name of par3SWRC, for Van Genuchten is nan
     dataPar3SWRC = ncfile.createVariable('par3SWRC','f8',('zz'))
-    dataPar3SWRC.units = '-'
-    dataPar3SWRC.long_name = 'no value'
+    dataPar3SWRC.units = 'm'
+    dataPar3SWRC.long_name = 'Parameter sigma2 of Romano et al. model'
     
     ## enter the long_name of par4SWRC, for Van Genuchten is nan
     dataPar4SWRC = ncfile.createVariable('par4SWRC','f8',('zz'))
-    dataPar4SWRC.units = '-'
-    dataPar4SWRC.long_name = 'no value'
+    dataPar4SWRC.units = 'm'
+    dataPar4SWRC.long_name = 'Parameter h1 of Romano et al. model'
     
     ## enter the long_name of par5SWRC, for Van Genuchten is nan
     dataPar5SWRC = ncfile.createVariable('par5SWRC','f8',('zz'))
-    dataPar5SWRC.units = '-'
-    dataPar5SWRC.long_name = 'no value'
+    dataPar5SWRC.units = 'm'
+    dataPar5SWRC.long_name = 'Parameter h2 of Romano et al. model'
     
     ## enter the long_name of par6SWRC, critical value of psi for Van Genuchten model
     dataPar6SWRC = ncfile.createVariable('par6SWRC','f8',('zz'))
@@ -574,13 +631,13 @@ def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks
     
     ## enter the long_name of par7SWRC, for Van Genuchten is nan
     dataPar7SWRC = ncfile.createVariable('par7SWRC','f8',('zz'))
-    dataPar7SWRC.units = '-'
-    dataPar7SWRC.long_name = 'no value'
+    dataPar7SWRC.units = 'm'
+    dataPar7SWRC.long_name = 'Critical value of psi, where moisture capacity is null'
     
     ## enter the long_name of par8SWRC, for Van Genuchten is nan
     dataPar8SWRC = ncfile.createVariable('par8SWRC','f8',('zz'))
-    dataPar8SWRC.units = '-'
-    dataPar8SWRC.long_name = 'no value'
+    dataPar8SWRC.units = 'm'
+    dataPar8SWRC.long_name = 'Critical value of psi, where moisture capacity is null'
 
 
 
@@ -603,14 +660,14 @@ def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks
         dataKs[i] = Ks[i]
         dataAlphaSS[i] = alphaSpecificStorage[i]
         dataBetaSS[i] = betaSpecificStorage[i]
-        dataPar1SWRC[i] = n[i]
-        dataPar2SWRC[i] = alpha[i]
-        dataPar3SWRC[i] = par3SWRC[i]
-        dataPar4SWRC[i] = par4SWRC[i]
-        dataPar5SWRC[i] = par5SWRC[i]
-        dataPar6SWRC[i] = psiStar[i]
-        dataPar7SWRC[i] = par7SWRC[i]
-        dataPar8SWRC[i] = par8SWRC[i]
+        dataPar1SWRC[i] = w[i]
+        dataPar2SWRC[i] = sigma1[i]
+        dataPar3SWRC[i] = sigma2[i]
+        dataPar4SWRC[i] = h1[i]
+        dataPar5SWRC[i] = h2[i]
+        dataPar6SWRC[i] = psiStar1[i]
+        dataPar7SWRC[i] = psiStar2[i]
+        dataPar8SWRC[i] = psiStar3[i]
    
         
     ## close the file.

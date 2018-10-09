@@ -263,11 +263,17 @@ def showTotalHead(psiIC,z,eta,icType,labelSize,titleSize,legendSize,axisTicksSiz
 def setParameters(data,eta):
     thetaS = []
     thetaR = []
-    Ks = [] 
+    Ks = []
+    alphaSS = []
+    betaSS = []
     par1SWRC = []
     par2SWRC = []
     par3SWRC = []
     par4SWRC = []
+    par5SWRC = []
+    par6SWRC = []
+    par7SWRC = []
+    par8SWRC = []
     et = []
 
 
@@ -275,10 +281,16 @@ def setParameters(data,eta):
     tempThetaS = []
     tempThetaR = []
     tempKs = []
+    tempAlphaSS = []
+    tempBetaSS = []
     tempPar1 = []
     tempPar2 = []
     tempPar3 = []
     tempPar4 = []
+    tempPar5 = []
+    tempPar6 = []
+    tempPar7 = []
+    tempPar8 = []
     tempEt = []
 
     for i in data.index:
@@ -287,10 +299,16 @@ def setParameters(data,eta):
             tempThetaS.append(data['thetaS'][i])
             tempThetaR.append(data['thetaR'][i])
             tempKs.append(data['Ks'][i])
+            tempAlphaSS.append(data['alphaSpecificStorage'][i])
+            tempBetaSS.append(data['betaSpecificStorage'][i])
             tempPar1.append(data['n'][i])
             tempPar2.append(data['psiD'][i])
-            tempPar3.append(data['alphaSpecificStorage'][i])
-            tempPar4.append(data['betaSpecificStorage'][i])
+            tempPar3.append(-999.0)
+            tempPar4.append(-999.0)
+            tempPar5.append(-999.0)
+            tempPar6.append(data['psiD'][i])
+            tempPar7.append(-999.0)
+            tempPar8.append(-999.0)
             tempEt.append(data['et'][i])
             
      
@@ -300,16 +318,22 @@ def setParameters(data,eta):
                 thetaS.append(tempThetaS[i-1])
                 thetaR.append(tempThetaR[i-1])
                 Ks.append(tempKs[i-1])
+                alphaSS.append(tempAlphaSS[i-1])
+                betaSS.append(tempBetaSS[i-1])
                 par1SWRC.append(tempPar1[i-1])
                 par2SWRC.append(tempPar2[i-1])
                 par3SWRC.append(tempPar3[i-1])
                 par4SWRC.append(tempPar4[i-1])
+                par5SWRC.append(tempPar5[i-1])
+                par6SWRC.append(tempPar6[i-1])
+                par7SWRC.append(tempPar7[i-1])
+                par8SWRC.append(tempPar8[i-1])
                 et.append(tempEt[i-1])
     
         ## add et coeff for free water
     et = np.append(et,0)   
         
-    return [thetaS, thetaR, Ks, par1SWRC, par2SWRC, par3SWRC, par4SWRC, et]
+    return [thetaS, thetaR, Ks, alphaSS, betaSS, par1SWRC, par2SWRC, par3SWRC, par4SWRC, par5SWRC,  par6SWRC,  par7SWRC,  par8SWRC,  et]
 
 '''
 plot parameters 
@@ -318,7 +342,7 @@ This function allows to plot the distribution of SWRC parameters in the soil col
 These plots are drawn with bokeh library https://bokeh.pydata.org/en/latest/
 and they are interactive.
 '''
-def showParameters(thetaS,thetaR,Ks,n,psiD,alphaSpecificStorage,betaSpecificStorage,et,eta,labelSize,titleSize,axisTicksSize,lineWidth):
+def showParameters(thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage,n,psiD,psiStar,et,eta,labelSize,titleSize,axisTicksSize,lineWidth):
     hover = HoverTool(tooltips=[
     ("(x,y)", "($x, $y)"),
     ])
@@ -386,47 +410,59 @@ def showParameters(thetaS,thetaR,Ks,n,psiD,alphaSpecificStorage,betaSpecificStor
 
     p6 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p6.scatter(alphaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p6.xaxis.axis_label = '\u03b1 [1/Pa]'
+    p6.scatter(psiStar, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p6.xaxis.axis_label = '\u03C8* [m] '
     p6.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p6.yaxis.axis_label = '\u03b7 [m]'
     p6.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p6.title.text = 'Compressibility of soil'
+    p6.title.text = 'Van Genuchten \u03C8*'
     p6.title.align = "center"
     p6.title.text_font_size = str(titleSize) + "px"
-    tab6= Panel(child=p6, title="\u03b1")
-
+    tab6= Panel(child=p6, title="\u03C8*")
+    
     p7 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p7.scatter(betaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
-    p7.xaxis.axis_label = '\u03b2 [1/Pa]'
+    p7.scatter(alphaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p7.xaxis.axis_label = '\u03b1 [1/Pa]'
     p7.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p7.yaxis.axis_label = '\u03b7 [m]'
     p7.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p7.title.text = 'Compressibility of water'
+    p7.title.text = 'Compressibility of soil'
     p7.title.align = "center"
     p7.title.text_font_size = str(titleSize) + "px"
-    tab7= Panel(child=p7, title="\u03b2")
+    tab7= Panel(child=p7, title="\u03b1")
 
     p8 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
             title="Mouse over the dots" )
-    p8.scatter(et, eta,line_width=lineWidth, color="red")
-    p8.xaxis.axis_label = 'et coeff. [1/s]'
+    p8.scatter(betaSpecificStorage, eta[0:np.size(eta)-1],line_width=lineWidth, color="red")
+    p8.xaxis.axis_label = '\u03b2 [1/Pa]'
     p8.xaxis.axis_label_text_font_size = str(labelSize) + "px"
     p8.yaxis.axis_label = '\u03b7 [m]'
     p8.yaxis.axis_label_text_font_size = str(labelSize) + "px"
-    p8.title.text = 'Source sink term'
+    p8.title.text = 'Compressibility of water'
     p8.title.align = "center"
     p8.title.text_font_size = str(titleSize) + "px"
-    tab8= Panel(child=p8, title="et")
+    tab8= Panel(child=p8, title="\u03b2")
+
+    p9 = figure(plot_width=600, plot_height=600,tools=['pan,wheel_zoom,box_zoom,reset',hover],
+            title="Mouse over the dots" )
+    p9.scatter(et, eta,line_width=lineWidth, color="red")
+    p9.xaxis.axis_label = 'et coeff. [1/s]'
+    p9.xaxis.axis_label_text_font_size = str(labelSize) + "px"
+    p9.yaxis.axis_label = '\u03b7 [m]'
+    p9.yaxis.axis_label_text_font_size = str(labelSize) + "px"
+    p9.title.text = 'Source sink term'
+    p9.title.align = "center"
+    p9.title.text_font_size = str(titleSize) + "px"
+    tab9= Panel(child=p9, title="et")
     
-    tabs = Tabs(tabs=[ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 ])
+    tabs = Tabs(tabs=[ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 ])
     show(tabs)
     
 '''
 Save all grid data in a NetCDF file
 '''
-def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks,n,psiD,alphaSpecificStorage,betaSpecificStorage,et,outputFileName,outputTitle,outputInstitution,outputSummary,folderPath,outputDate,inputFileName):
+def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks,alphaSpecificStorage,betaSpecificStorage,n,psiD,par3SWRC,par4SWRC,par5SWRC,psiStar,par7SWRC,par8SWRC,et,outputFileName,outputTitle,outputInstitution,outputSummary,folderPath,outputDate,inputFileName):
         # the output array to write will be nx x ny
     dim = np.size(eta);
     dim1 = np.size(thetaS)
@@ -496,6 +532,14 @@ def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks
     dataKs.units = 'm/s'
     dataKs.long_name = 'hydraulic conductivity at saturation'
     
+    dataAlphaSS = ncfile.createVariable('alphaSpecificStorage','f8',('zz'))
+    dataAlphaSS.units = '1/Pa'
+    dataAlphaSS.long_name = 'Aquitard compressibility'
+    
+    dataBetaSS = ncfile.createVariable('betaSpecificStorage','f8',('zz'))
+    dataBetaSS.units = '1/Pa'
+    dataBetaSS.long_name = 'Water compressibility'
+    
     ## enter the long_name of par1SWRC, as an example  Parameter n of Van Genuchten model
     dataPar1SWRC = ncfile.createVariable('par1SWRC','f8',('zz'))
     dataPar1SWRC.units = '-'
@@ -506,13 +550,35 @@ def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks
     dataPar2SWRC.units = 'm'
     dataPar2SWRC.long_name = 'Parameter psiD of Brooks and Corey model'
     
+    ## enter the long_name of par3SWRC, for Van Genuchten is nan
     dataPar3SWRC = ncfile.createVariable('par3SWRC','f8',('zz'))
-    dataPar3SWRC.units = '1/Pa'
-    dataPar3SWRC.long_name = 'Aquitard compressibility'
+    dataPar3SWRC.units = '-'
+    dataPar3SWRC.long_name = 'no value'
     
+    ## enter the long_name of par4SWRC, for Van Genuchten is nan
     dataPar4SWRC = ncfile.createVariable('par4SWRC','f8',('zz'))
-    dataPar4SWRC.units = '1/Pa'
-    dataPar4SWRC.long_name = 'Water compressibility'
+    dataPar4SWRC.units = '-'
+    dataPar4SWRC.long_name = 'no value'
+    
+    ## enter the long_name of par5SWRC, for Van Genuchten is nan
+    dataPar5SWRC = ncfile.createVariable('par5SWRC','f8',('zz'))
+    dataPar5SWRC.units = '-'
+    dataPar5SWRC.long_name = 'no value'
+    
+    ## enter the long_name of par6SWRC, critical value of psi for Van Genuchten model
+    dataPar6SWRC = ncfile.createVariable('par6SWRC','f8',('zz'))
+    dataPar6SWRC.units = 'm'
+    dataPar6SWRC.long_name = 'Critical value of psi, where moisture capacity is null'
+    
+    ## enter the long_name of par7SWRC, for Van Genuchten is nan
+    dataPar7SWRC = ncfile.createVariable('par7SWRC','f8',('zz'))
+    dataPar7SWRC.units = '-'
+    dataPar7SWRC.long_name = 'no value'
+    
+    ## enter the long_name of par8SWRC, for Van Genuchten is nan
+    dataPar8SWRC = ncfile.createVariable('par8SWRC','f8',('zz'))
+    dataPar8SWRC.units = '-'
+    dataPar8SWRC.long_name = 'no value'
 
 
 
@@ -532,10 +598,16 @@ def writeGridNetCDF(eta,etaDual,z,zDual,spaceDelta,deltaZ,psiIC,thetaS,thetaR,Ks
         dataThetaS[i] = thetaS[i]
         dataThetaR[i] = thetaR[i]
         dataKs[i] = Ks[i]
+        dataAlphaSS[i] = alphaSpecificStorage[i]
+        dataBetaSS[i] = betaSpecificStorage[i]
         dataPar1SWRC[i] = n[i]
         dataPar2SWRC[i] = psiD[i]
-        dataPar3SWRC[i] = alphaSpecificStorage[i]
-        dataPar4SWRC[i] = betaSpecificStorage[i]
+        dataPar3SWRC[i] = par3SWRC[i]
+        dataPar4SWRC[i] = par4SWRC[i]
+        dataPar5SWRC[i] = par5SWRC[i]
+        dataPar6SWRC[i] = psiStar[i]
+        dataPar7SWRC[i] = par7SWRC[i]
+        dataPar8SWRC[i] = par8SWRC[i]
    
         
     ## close the file.
