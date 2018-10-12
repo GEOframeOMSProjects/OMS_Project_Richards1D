@@ -2,7 +2,7 @@
 """
 Created on Fri May 25 08:42:31 2018
 
-@author: Niccolo` Tubini and Riccardo Rigon
+@author: Niccolo` Tubini, Concetta D'Amato and Riccardo Rigon
 @license: creative commons 4.0
 """
 
@@ -134,7 +134,6 @@ def readRichardsOutputNetCDF(fileName):
 def showInitialCondition(iC,depths,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
 
     plt.figure(figsize=(figureSizeHeigth,figureSizeWidth))
-
     plt.plot(iC,depths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
     plt.title('Initial condition',fontsize=titleSize)
     # use variable attributes to label axis
@@ -147,14 +146,17 @@ def showInitialCondition(iC,depths,ncfile,labelSize,titleSize,legendSize,axisTic
     return
 
 
-def showWaterSuction(timeIndex,psi,depths,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
-    
-    date = datetime.datetime.fromtimestamp(time[timeIndex])
-    plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
+def showWaterSuction(timeIndex,date,psi,depths,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
 
-    plt.plot(psi[timeIndex],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
+    color = ['b','g','r']
+    for i in range(0,len(timeIndex)):
+        plt.plot(psi[timeIndex[i]],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color=color[i]) 
+    plt.legend(date,loc=3)
+    
     # convert time value in a human readable date to title the plot
-    plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
+    plt.title(date, fontsize=titleSize)
+    
     # use variable attributes to label axis
     plt.xlabel(ncfile.variables['psi'].long_name + '  [' +ncfile.variables['psi'].units +']',fontsize=labelSize)
     plt.ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize )
@@ -164,38 +166,42 @@ def showWaterSuction(timeIndex,psi,depths,time,ncfile,labelSize,titleSize,legend
     plt.show()
     return
 
-def showWaterSuctionWithBCs(timeIndex,psi,depths,topBC_DF,bottomBC_DF,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
-
-    dateIndex = timeIndex
-    date = datetime.datetime.fromtimestamp(time[timeIndex])
-    plt.figure(figsize=(figureSizeWidth1,figureSizeHeigth1))
+def showWaterSuctionWithBCs(timeIndex,date,psi,depths,topBC_DF,bottomBC_DF,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
     
+    plt.figure(figsize=(figureSizeWidth1,figureSizeHeigth1))
     axp = plt.subplot2grid((4, 6), (0, 0), rowspan=4, colspan=2)
-    axp.plot(psi[timeIndex],depths[:],linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    dateIndex = timeIndex
+    color = ['b','g','r']
+    for i in range(0,len(timeIndex)):
+        axp.plot(psi[timeIndex[i]],depths[:],linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color=color[i]) 
+    plt.legend(date)    
     axp.set_xlabel(ncfile.variables['psi'].long_name + '  [' +ncfile.variables['psi'].units +']',fontsize=labelSize)
     axp.set_ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize)
-    axp.set_title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
+    axp.set_title(date,fontsize=titleSize)
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
     axp.grid()
     
     axb = plt.subplot2grid((4, 6), (2,2), rowspan=2, colspan=4)
-    axb.plot(bottomBC_DF[0:dateIndex+40], linewidth=lineWidth, label='_nolegend_')
-    axb.set_xlabel("Time",fontsize=labelSize)
-    axb.set_ylabel("[$m$]",fontsize=labelSize)
-    axb.set_title('Bottom BC: water table',fontsize=titleSize)
-    axb.vlines(x=dateIndex, ymin=np.min(bottomBC_DF['bottomBC'][:])*(0.5), ymax=(1.5), label=date.strftime('%Y-%m-%d %H:%M'), color='r',linewidth=lineWidth,)
-    plt.legend()
+    for i in range(0,len(timeIndex)):
+        axb.plot(bottomBC_DF[0:dateIndex[i]+40], linewidth=lineWidth, label='_nolegend_')
+        axb.set_xlabel("Time",fontsize=labelSize)
+        axb.set_ylabel("[$m$]",fontsize=labelSize)
+        axb.set_title('Bottom BC: water table',fontsize=titleSize)
+        axb.vlines(x=dateIndex[i], ymin=np.min(bottomBC_DF['bottomBC'][:])*(0.5), ymax=(1.5), label= date[i], color=color[i],linewidth=lineWidth,)
+    plt.legend(date,loc=3)
+
     axb.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.setp(axb.get_xticklabels(), visible=False)
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
     
     axt = plt.subplot2grid((4, 6), (0, 2), rowspan=2,colspan=4,sharex=axb)
-    axt.plot(topBC_DF[0:dateIndex+40],linewidth=lineWidth,)
-    axt.set_xlabel("Time",fontsize=labelSize)
-    axt.set_ylabel("[$mm$]",fontsize=labelSize)
-    axt.set_title('Top BC: rainfall heigth',fontsize=titleSize)
-    axt.vlines(x=dateIndex, ymin=np.min(topBC_DF['topBC'][:])*(0.5), ymax=(1.5), label=date.strftime('%Y-%m-%d %H:%M'), color='r',linewidth=lineWidth,)
-    plt.legend()
+    for i in range(0,len(timeIndex)):
+        axt.plot(topBC_DF[0:dateIndex[i]+40],linewidth=lineWidth,)
+        axt.set_xlabel("Time",fontsize=labelSize)
+        axt.set_ylabel("[$mm$]",fontsize=labelSize)
+        axt.set_title('Top BC: rainfall heigth',fontsize=titleSize)
+        axt.vlines(x=dateIndex[i], ymin=np.min(topBC_DF['topBC'][:])*(0.5), ymax=(1.5), label=date[i], color=color[i],linewidth=lineWidth,)
+    plt.legend(date)
     axt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.setp(axt.get_xticklabels(), visible=False)
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
@@ -203,14 +209,17 @@ def showWaterSuctionWithBCs(timeIndex,psi,depths,topBC_DF,bottomBC_DF,time,ncfil
     plt.tight_layout() 
     return
 
-def showHydraulicHead(timeIndex,psi,depths,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
-
-    date = datetime.datetime.fromtimestamp(time[timeIndex])
+def showHydraulicHead(timeIndex,date,psi,depths,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
+   
     plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
-    
-    plt.plot(psi[timeIndex]+depths[:]-depths[0],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    color = ['b','g', 'r']
+    for i in range(0,len(timeIndex)):
+        plt.plot(psi[timeIndex[i]]+depths[:]-depths[0],depths[:], linewidth=lineWidth,linestyle=lineStyle, marker=markerType, markersize=markerSize, color=color[i])
+    plt.legend(date,loc=4)
+       
     # convert time value in a human readable date to title the plot
-    plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
+    plt.title(date, fontsize=titleSize)
+    
     # use variable attributes to label axis
     plt.xlabel('Hydraulic head [m]',fontsize=labelSize)
     plt.ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize )
@@ -220,61 +229,70 @@ def showHydraulicHead(timeIndex,psi,depths,time,ncfile,labelSize,titleSize,legen
     plt.show()
     return
 
-def showWaterContent(timeIndex,theta,depths,data,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
+def showWaterContent(timeIndex,date,theta,depths,data,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
 
-    date = datetime.datetime.fromtimestamp(time[timeIndex])
     fig, ax=plt.subplots(figsize=(figureSizeWidth,figureSizeHeigth))
     figsize=(20,20)
-    ax.plot(theta[timeIndex,0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='r')
-    waterLevel=theta[timeIndex,depths[:].shape[0]-1]
-    ax.axhline(y=waterLevel, color='deepskyblue',linewidth=lineWidth,)
+    color = ['b','g','r']
+  
+    for i in range(0,len(timeIndex)):
+        ax.plot(theta[timeIndex[i],0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color=color[i])
+    plt.legend(date,loc=3)
+
+    for n in range(0,len(timeIndex)):  
+        waterLevel=theta[timeIndex[n],depths[:].shape[0]-1]
+        ax.axhline(y=waterLevel, color=color[n], linewidth=lineWidth)
     
+
     # convert time value in a human readable date to title the plot
-    plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
+    plt.title(date,fontsize=titleSize)
     # use variable attributes to label axis
-    #plt.xlabel(ncfile.variables['water_heigth'].long_name + '  [' +ncfile.variables['water_heigth'].units +']',fontsize=labelSize )
+    plt.xlabel('$\\theta$ [$-$]',fontsize=labelSize )
     plt.ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize )
     plt.xticks(fontsize=axisTicksSize)
     plt.yticks(fontsize=axisTicksSize)
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
     
     plt.ylim(depths[0]-0.1,waterLevel+0.1)
-    
     trans = transforms.blended_transform_factory(
-        ax.get_yticklabels()[0].get_transform(), ax.transData)
+       ax.get_yticklabels()[0].get_transform(), ax.transData)
     ax.text(-0.08,waterLevel, "{:.2f}".format(waterLevel), color="deepskyblue", transform=trans, 
-        ha="right", va="center",fontsize=axisTicksSize)
-
-    for i in range(1,np.size(data.index)-1):
-        if data['Type'][i] == 'L':
-            c = 'black'
-            l = 'layer'
-            plt.plot([np.min(theta[timeIndex,0:np.size(theta[timeIndex,])-1])-0.001,np.max(theta[timeIndex,])+0.001], [data['eta'][i],data['eta'][i]], color=c,linewidth=lineWidth-2)
-            
-    plt.legend(['$\\theta$', 'Total water depth','layer'], fontsize=legendSize,loc=4)
-            
+       ha="right", va="center",fontsize=axisTicksSize)
+    for n in range(0,len(timeIndex)):
+        for i in range(1,np.size(data.index)-1):
+            if data['Type'][i] == 'L':
+                c = 'black'
+                l = 'layer'
+                plt.plot([np.min(theta[timeIndex[n],0:np.size(theta[timeIndex[n],])-1])-0.001,np.max(theta[timeIndex[n],])+0.001], [data['eta'][i],data['eta'][i]], color=c,linewidth=lineWidth-2)
+         
     plt.grid()
     plt.show()
     return
 
-def showWaterContentWithBCs(timeIndex,theta,depths,bottomBC_DF,topBC_DF,data,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
-    waterLevel=theta[timeIndex,depths[:].shape[0]-1]
-
-    date = datetime.datetime.fromtimestamp(time[timeIndex])
+def showWaterContentWithBCs(timeIndex,date,theta,depths,bottomBC_DF,topBC_DF,data,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
+    
     dateIndex = timeIndex
     plt.figure(figsize=(figureSizeWidth1,figureSizeHeigth1))
-    
     axp = plt.subplot2grid((4, 6), (0, 0), rowspan=4, colspan=2)
-    axp.plot(theta[timeIndex,0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='r')
-    axp.axhline(y=theta[timeIndex,depths[:].shape[0]-1], color='deepskyblue',linewidth=lineWidth, linestyle='-')
-    for i in range(1,np.size(data.index)-1):
-        if data['Type'][i] == 'L':
-            c = 'black'
-            l = 'layer'
-            axp.plot([np.min(theta[timeIndex,0:np.size(theta[timeIndex,])-1])-0.001,np.max(theta[timeIndex,])+0.001], [data['eta'][i],data['eta'][i]], color=c,linewidth=lineWidth-2)
-        
-    plt.legend(['$\\theta$', 'Total water depth','layer'], fontsize=legendSize,loc=3)
-    axp.set_title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
+    color = ['b','g','r']
+
+    for i in range(0,len(timeIndex)):    
+        axp.plot(theta[timeIndex[i],0:depths[:].shape[0]-2],depths[0:depths[:].shape[0]-2], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize,color=color[i])
+    plt.legend(date,loc=3)
+
+    for n in range(0,len(timeIndex)):     
+        waterLevel=theta[timeIndex[n],depths[:].shape[0]-1]
+        axp.axhline(y=waterLevel, color=color[n],linewidth=lineWidth, linestyle='-')
+
+    for n in range(0,len(timeIndex)):
+        for i in range(1,np.size(data.index)-1):
+            if data['Type'][i] == 'L':
+                c = 'black'
+                l = 'layer'
+                axp.plot([np.min(theta[timeIndex[n],0:np.size(theta[timeIndex[n],])-1])-0.001,np.max(theta[timeIndex[n],])+0.001], [data['eta'][i],data['eta'][i]], color=c,linewidth=lineWidth-2)
+
+
+    axp.set_title(date,fontsize=titleSize)
     plt.xlabel('$\\theta$ [$-$]',fontsize=labelSize )
     plt.ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize )
     plt.xticks(fontsize=axisTicksSize)
@@ -283,51 +301,54 @@ def showWaterContentWithBCs(timeIndex,theta,depths,bottomBC_DF,topBC_DF,data,tim
     # https://stackoverflow.com/questions/42877747/add-a-label-to-y-axis-to-show-the-value-of-y-for-a-horizontal-line-in-matplotlib
     trans = transforms.blended_transform_factory(
     axp.get_yticklabels()[0].get_transform(), axp.transData)
-    axp.text(-0.08,waterLevel, "{:.2f}".format(waterLevel), color="deepskyblue", transform=trans, 
-         ha="right", va="center",fontsize=axisTicksSize)
+    axp.text(-0.08,waterLevel, "{:.2f}".format(waterLevel), color="deepskyblue",transform=trans,ha="right", va="center",fontsize=axisTicksSize)
         
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
     axp.grid()
     
     axb = plt.subplot2grid((4, 6), (2,2), rowspan=2, colspan=4)
-    axb.plot(bottomBC_DF[0:dateIndex+40],linewidth=lineWidth, label='_nolegend_')
-    axb.set_xlabel("Time",fontsize=labelSize)
-    axb.set_ylabel("[$m$]",fontsize=labelSize)
-    axb.set_title('Bottom BC: water table',fontsize=titleSize)
-    axb.vlines(x=dateIndex, ymin=np.min(bottomBC_DF['bottomBC'][:])*(0.5), ymax=(1.5), label=date.strftime('%Y-%m-%d %H:%M'), color='r',linewidth=lineWidth)
-    plt.legend()
+    for i in range(0,len(timeIndex)):
+        axb.plot(bottomBC_DF[0:dateIndex[i]+40],linewidth=lineWidth, label='_nolegend_')
+        axb.set_xlabel("Time",fontsize=labelSize)
+        axb.set_ylabel("[$m$]",fontsize=labelSize)
+        axb.set_title('Bottom BC: water table',fontsize=titleSize)
+        axb.vlines(x=dateIndex[i], ymin=np.min(bottomBC_DF['bottomBC'][:])*(0.5), ymax=(1.5), label=date[i], color=color[i],linewidth=lineWidth)
+    plt.legend(date)
     axb.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.setp(axb.get_xticklabels(), visible=False)
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
     
     axt = plt.subplot2grid((4, 6), (0, 2), rowspan=2,colspan=4,sharex=axb)
-    axt.plot(topBC_DF[0:dateIndex+40],linewidth=lineWidth,)
-    axt.set_xlabel("Time",fontsize=labelSize)
-    axt.set_ylabel("[$mm$]",fontsize=labelSize)
-    axt.set_title('Top BC: rainfall heigth',fontsize=titleSize)
-    axt.vlines(x=dateIndex, ymin=np.min(topBC_DF['topBC'][:])*(0.5), ymax=(1.5), label=date.strftime('%Y-%m-%d %H:%M'), color='r',linewidth=lineWidth)
-    plt.legend()
+    for i in range(0,len(timeIndex)):    
+        axt.plot(topBC_DF[0:dateIndex[i]+40],linewidth=lineWidth)
+        axt.set_xlabel("Time",fontsize=labelSize)
+        axt.set_ylabel("[$mm$]",fontsize=labelSize)
+        axt.set_title('Top BC: rainfall heigth',fontsize=titleSize)
+        axt.vlines(x=dateIndex[i], ymin=np.min(topBC_DF['topBC'][:])*(0.5), ymax=(1.5), label=date[i], color=color[i],linewidth=lineWidth)
+    plt.legend(date)
     axt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.setp(axt.get_xticklabels(), visible=False)
     plt.tick_params(axis='both', which='major', labelsize=axisTicksSize)
     
-    plt.tight_layout() 
+    plt.tight_layout()
     return
 
-def showVelocities(timeIndex,velocities,dualDepths,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
+def showVelocities(timeIndex,date,velocities,dualDepths,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
 
-    date = datetime.datetime.fromtimestamp(time[timeIndex])
     plt.figure(figsize=(figureSizeWidth,figureSizeHeigth))
-
-    plt.plot(velocities[timeIndex],dualDepths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color='b')
+    color = ['b','g', 'r']
+    for i in range(0,len(timeIndex)):
+        plt.plot(velocities[timeIndex[i]],dualDepths[:], linewidth=lineWidth, linestyle=lineStyle, marker=markerType, markersize=markerSize, color=color[i])
+    
     # convert time value in a human readable date to title the plot
-    plt.title('Date: '+date.strftime('%Y-%m-%d %H:%M'),fontsize=titleSize)
+    plt.title(date,fontsize=titleSize)
     # use variable attributes to label axis
     plt.xlabel(ncfile.variables['velocities'].long_name + '  [' +ncfile.variables['velocities'].units +']',fontsize=labelSize)
     plt.ylabel(ncfile.variables['depth'].long_name + '  [' +ncfile.variables['depth'].units +']',fontsize=labelSize )
     plt.gca().xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
     plt.xticks(fontsize=axisTicksSize)
     plt.yticks(fontsize=axisTicksSize)
+    plt.legend(date, loc=3)
     plt.grid()
     plt.show()
     return
@@ -350,7 +371,7 @@ def showError(error,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lin
     return
 
     
-def show(timeIndex,psi,theta,velocities,depths,dualDepths,data,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
+def show(timeIndex,date,psi,theta,velocities,depths,dualDepths,data,time,ncfile,labelSize,titleSize,legendSize,axisTicksSize,lineWidth,lineStyle,markerSize,markerType,figureSizeHeigth,figureSizeWidth,figureSizeHeigth1,figureSizeWidth1):
 
     ## https://bokeh.pydata.org/en/latest/docs/user_guide/tools.html#built-in-tools
     date = datetime.datetime.fromtimestamp(time[timeIndex])
