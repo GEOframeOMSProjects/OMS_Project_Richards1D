@@ -52,7 +52,7 @@ resource "$oms_prj/lib"
 		parameter {
 
 			// File path of grid.nc file, the file created with RichardsMeshGen.ipynb	
-			"readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/Clay_noPonding_VG_a.nc"
+			"readNetCDF.richardsGridFilename" "$oms_prj//data/Grid_NetCDF/Clay_noPonding_VG.nc"
 
 			// Available SWRC models:
 			// - "Van Genuchten"
@@ -145,7 +145,7 @@ resource "$oms_prj/lib"
 			"reader_data_bottomBC.fileNovalue"      "-9999"
 
 			// folder path for the output files
-			"writeNetCDF.fileName" "$oms_prj//output/Clay_noPonding_VG_1.nc"
+			"writeNetCDF.fileName" "$oms_prj//output/Clay_noPonding_VG.nc"
 			// here you can enter a string to describe your simulation
 			"writeNetCDF.briefDescritpion" "grid:  data/Grid_NetCDF/Clay_noPonding_VG.nc; topBC TestAll_0.csv, bottomBC Neumann TestAll_0, deltaT 300s"
 
