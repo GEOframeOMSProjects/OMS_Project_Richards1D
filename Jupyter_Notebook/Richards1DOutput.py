@@ -30,7 +30,8 @@ import matplotlib.dates as mdates
 ## to convert unix time to human readable date
 import time
 import datetime
-
+import pytz
+ 
 # Standard imports 
 from bokeh.io import output_notebook, show
 from bokeh.plotting import figure
@@ -94,10 +95,10 @@ def readRichardsOutputNetCDF(fileName):
     bottomBC = ncfile.variables['bottomBC']
 
     ## creates a vector with human readable dates
-    datesHuman = [datetime.datetime.fromtimestamp(t).strftime("%Y-%m-%d %H:%M") for t in time[:]]
+    datesHuman = [datetime.datetime.fromtimestamp(t,tz=pytz.UTC).strftime("%Y-%m-%d %H:%M") for t in time[:]]
 
     ## creates a vector of dates
-    dates = [pd.Timestamp(datetime.datetime.fromtimestamp(t)) for t in time]
+    dates = [pd.Timestamp(datetime.datetime.fromtimestamp(t,tz=pytz.UTC)) for t in time]
     
     ## create a dataframe for boundary condition timeseries, this will simplify plotting
     topBC_DF = pd.DataFrame(np.column_stack([dates, topBC]), 
