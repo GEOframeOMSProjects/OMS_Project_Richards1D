@@ -210,8 +210,23 @@ def setInitialCondition(data,eta,z,icType):
 
         psiIC = np.append(psiIC,data['psi'][0] )
     
+    ## piecewise-hydrostatic
+    elif icType=='piecewise-hydrostatic':
+        psiIC = []
+        tmp = 0
+        for i in range(np.size(data.index)-2,-1,-1):
+            if i == np.size(data.index)-2:
+                for j in range(0,int(data['N'][i])):
+                    psiIC = np.append(psiIC,data['psi'][np.size(data['psi'])-1]+(data['eta'][np.size(data['eta'])-1]-eta[j]))
+                    tmp = tmp+1
+            else:
+                for j in range(tmp,int(tmp+data['N'][i])):
+                    psiIC = np.append(psiIC,data['psi'][i+1]+(data['eta'][i+1]-eta[j]))
+                    tmp = tmp+1
+
+        psiIC = np.append(psiIC,data['psi'][0] )
     else:
-        print('icType is not hydrostatic or constant or linear interpolation')
+        print('icType is not hydrostatic or constant or linear interpolation or piecewise-hydrostatic')
     
     return psiIC
 
